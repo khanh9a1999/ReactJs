@@ -1,11 +1,14 @@
 import React from 'react';
 import styles from '../Types.module.sass'
+import { useSelector } from 'react-redux'
 
-function Quantity({type, products}) {
+
+function Quantity({type}) {
 
     let types = [];
+    const listAllTypes = useSelector( state => state.types.listAllTypes)
 
-    products.forEach((product) => {
+    listAllTypes.forEach((product) => {
         if(product.type === type){
             types.push(product)
         }

@@ -3,7 +3,7 @@ import Rating from './Rating'
 import styles from './FilterRating.module.sass'
 import { memo } from 'react'
 
-function FilterRating({setFilter}) {
+function FilterRating() {
     return (
         <div className={styles.filterRating}>
             <h2>Ratings</h2>
@@ -12,7 +12,6 @@ function FilterRating({setFilter}) {
                     <Rating 
                         key={index}
                         props={item}
-                        setFilter={setFilter}
                     />
                 ))
             }

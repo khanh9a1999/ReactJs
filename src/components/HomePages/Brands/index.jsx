@@ -2,54 +2,38 @@ import React, { useState, useEffect } from 'react'
 import styles from './Brands.module.sass'
 import Quantity from './Quantity'
 import { memo } from 'react'
+import { useSelector, useDispatch} from 'react-redux'
+import { setFilter } from '../../../actions/filter'
+import { getListBrandsSaga, setCheckedBrands } from '../../../actions/brands'
 
-function Brands({filter, setFilter}) {
+function Brands() {
 
-    const [products, setProducts] = useState([])
+    const listBrandsFilted = useSelector( state => state.brands.listBrandsFilted)
+    const filter = useSelector( state => state.filter.filter)
+
+    const dispatch = useDispatch()
+
 
     useEffect(() => {
-        async function getProducts() {
-            try {
-                const requestUrl = 'http://localhost:3000/data'
-                const response = await fetch(requestUrl)
-                const responseJSON = await response.json()
-                setProducts(responseJSON)
-            } catch (err) {
-                console.log('failse')
-            }
-        }
-        getProducts()
+        dispatch(getListBrandsSaga())
     },[])
-
-    let listBrand = []
-    products.forEach((item) =>
-        listBrand.push(item.brand)
-    )
-
-    let brand = []
-    listBrand.forEach((item) => {
-        if(brand.indexOf(item) === -1){
-            brand.push(item)
-        }
-    })
-
-    brand.sort()
 
     function handleBrand(e){
         let values = e.target.value
+        let listInputBrands = document.querySelectorAll('input')
         if (e.target.checked){
-            setFilter({
+            dispatch(setFilter({
                 ...filter,
                 _page: 1,
-                brand: values
-            })
-        } else{
-            setFilter({
-                _page: 1,
-                _limit: 16
-            })
+                brand_like: values
+            }))
+            dispatch(setCheckedBrands(listInputBrands))
+        } else { 
+            dispatch(setFilter({
+                ...filter,
+                brand_like: '',
+            }))
         }
-
     }
 
     return (
@@ -57,15 +41,15 @@ function Brands({filter, setFilter}) {
             <h2>Brand</h2>
             <form action="">
                 {
-                    brand.map((item, index) => {
+                    listBrandsFilted.map((item, index) => {
                         return (
                             <div className="form-check" key={index}>
-                                <input onClick={handleBrand} className="form-check-input" type="checkbox" value={item} id={item} />
+                                <input onClick={handleBrand} className="form-check-input" type="checkbox" value={item} id={item} /> 
+                                
                                 <label className="form-check-label" htmlFor={item}>
                                     {item}
                                 </label>
                                 <Quantity
-                                    products={products} 
                                     brand={item}
                                 />
                             </div>

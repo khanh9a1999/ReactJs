@@ -1,51 +1,38 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import React, { useEffect } from 'react'
 import styles from './Products.module.sass'
 import clsx from 'clsx'
 import { memo } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { setFilter } from '../../../actions/filter'
+import { setPaginations } from '../../../actions/paginations'
+import { getListProductsSaga } from '../../../actions/products'
+import SortBy from './SortBy'
 
-Products.propTypes = {
-    products: PropTypes.array,
-};
+function Products() {
 
-Products.defaultProps = {
-    products: [],
-}
+    const products = useSelector( state => state.products.products)
+    const filter = useSelector( state => state.filter.filter)
+    const dispatch = useDispatch()
+    const isLoading = useSelector( state => state.products.load)
+    const isError = useSelector( state => state.products.error)
 
-function Products({products, filter, setFilter}) {
-
-    function handlePriceEsc(){
-        setFilter({
-            ...filter,
-            _page: 1,
-            _sort: 'price',
-            _order: 'asc'
-        })
-    }
-
-    function handlePriceDesc(){
-        setFilter({
-            ...filter,
-            _page: 1,
-            _sort: 'price',
-            _order: 'desc'
-        })
-    }
+    useEffect(() => {
+        dispatch(getListProductsSaga(filter))
+        dispatch(setPaginations({
+            _page: filter._page,
+            _limit: 16,
+            _totalRows: 10000
+        }))
+    },[filter])
 
     return (
         <div className={clsx(styles.product, "col-md-10")}>   
             <div className={clsx(styles.listProduct, "row")}>
                 <div className={styles.sortPrice}>
-                    <button onClick={handlePriceEsc}>
-                        Sort by Price Esc
-                    </button>
-                    <button onClick={handlePriceDesc}>
-                        Sort by Price Desc
-                    </button>
+                    <SortBy />
                 </div>
-                {
-                    products.map((item) => (
-                            <article key={item.objectID} className="col-md-3">
+                { isLoading ? <h1>Loadiing...</h1> : products.map((item, index) => (
+                            <article key={index} className="col-md-3">
                                 <div className={styles.imgProduct}>
                                     <img src={item.image} alt="product" />
                                 </div>
@@ -72,9 +59,13 @@ function Products({products, filter, setFilter}) {
                         )
                     )
                 }
+                {
+                    isError && <h1>Ôi! Hỏng mất rồi</h1> 
+                }
             </div>
         </div>
     );
 }
+
 
 export default memo(Products);

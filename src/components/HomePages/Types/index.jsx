@@ -1,51 +1,36 @@
-import React, { useState, useEffect} from 'react'
+import React, { useEffect} from 'react'
 import styles from './Types.module.sass'
 import Quantity from './Quantity'
 import { memo } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { setFilter } from '../../../actions/filter'
+import { getListTypesSaga, setCheckedTypes } from '../../../actions/types'
 
-function Types({filter, setFilter}) {
+function Types() {
 
-    const [products, setProducts] = useState([])
+    const listTypesFilted = useSelector( state => state.types.listTypesFilted)
+    const filter = useSelector( state => state.filter.filter)
+    const dispatch = useDispatch()
 
     useEffect(() => {
-        async function getProducts() {
-            try {
-                const requestUrl = 'http://localhost:3000/data'
-                const response = await fetch(requestUrl)
-                const responseJSON = await response.json()
-                setProducts(responseJSON)
-            } catch (err) {
-                console.log('failse')
-            }
-        }
-        getProducts()
+        dispatch(getListTypesSaga())
     },[])
-
-    let listTypes = []
-    products.map((item) => listTypes.push(item.type))
-
-    let types = []
-    listTypes.map((item) => {
-        if(types.indexOf(item) === -1){
-            types.push(item)
-        }
-    })
-
-    types.sort()
     
-    function handleFilterType(e){
+    function handleType(e){
         let values = e.target.value
+        let listInputTypes = document.querySelectorAll('input')
         if (e.target.checked){
-            setFilter({
-                ...filter,
+            dispatch(setFilter({
+               ...filter,
                 _page: 1,
-                type: values
-            })
+                type_like: values
+            }))
+            dispatch(setCheckedTypes(listInputTypes))
         } else{
-            setFilter({
-                _page: 1,
-                _limit: 16,
-            })
+            dispatch(setFilter({
+                ...filter,
+                type_like: ''
+            }))
         }
 
     }
@@ -54,16 +39,15 @@ function Types({filter, setFilter}) {
         <div className={styles.typeProducts}>
             <h2>Type</h2>
             <form action="">
-                {types.map((type, index) => {
+                {listTypesFilted.map((item, index) => {
                     return(
                         <div key={index} className="form-check">
-                            <input onClick={handleFilterType} className="form-check-input" type="checkbox" value={type} id={type} />
-                            <label className="form-check-label" htmlFor={type}>
-                                {type}
+                            <input onClick={handleType} className="form-check-input" type="checkbox" value={item} id={item} />
+                            <label className="form-check-label" htmlFor={item}>
+                                {item}
                             </label>
                             <Quantity 
-                                products={products} 
-                                type={type}
+                                type={item}
                             />
                         </div>
                     )

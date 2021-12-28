@@ -1,106 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Category from './Category'
-import { CategoryData } from './SidebarData.js'
 import Pagination from './Pagination'
-import queryString from 'query-string'
 import Products from './Products'
 import Header from './Header'
 import Types from './Types'
 import Brands from './Brands'
 import FilterRating from './FilterRating'
 import Prices from './Prices'
+import { useSelector, useDispatch } from 'react-redux'
+import { setFilter } from '../../actions/filter'
+import styles from './HomePages.module.sass'
+import { setValuesInputSearch } from '../../actions/search'
+import { setSelectedCategories } from '../../actions/categorys'
+import { setValuesInputPricesGte, setValuesInputPricesLte } from '../../actions/prices'
 
 function HomePage() {
 
-    const [category, setCategory] = useState(CategoryData)
-    const [products, setProducts] = useState([])
-    const [pagination, setPagination] = useState({
-        _page: 1,
-        _limit: 16,
-        _totalRows: 1,
-    })
-   // 
-    const [filter, setFilter] = useState({
-        _page: 1,
-        _limit: 16,
-        name_like: '',
-        type: [],
-        brand: [],
-        _sort: '',
-        _order: '',
-        price_range: []
-    })
-    // 
+    const filter = useSelector( state => state.filter.filter)
+    const listInputBrands = useSelector( state => state.brands.listInputBrands)
+    const listInputTypes = useSelector( state => state.types.listInputTypes)
 
-    function handlePageChange(newPage) {
-        setFilter({
-            ...filter,
-            _page: newPage,
-            _limit: 16
-        })
-        
-    }
+    const options = useSelector( state => state.sort.options)
+
+    const dispatch = useDispatch()
+    
+    const [isClearFilter, setIsClearFilter] = useState(false)
 
     useEffect(() => {
-        async function getProducts() {
-            try {
-                const paramString = queryString.stringify(filter)
-                const requestUrl = `http://localhost:3000/data?${paramString}`
-                const response = await fetch(requestUrl)
-                const responseJSON = await response.json()
-                setProducts(responseJSON)
-                setPagination({
-                    _page: filter._page,
-                    _limit: 16,
-                    _totalRows: 10000
-                })
-            } catch (err) {
-                console.log('failse')
-            }
-        }
-        getProducts()
+        const filterValuesArr = [filter.name_like, filter._sort, filter._order, filter.brand_like, filter.categories_like, filter.type_like, filter.rating_like, filter.price_range_like]
+        const flag = filterValuesArr.some(value => value !== '')
+        setIsClearFilter(flag)
     }, [filter])
+
+    function handleClearFilter(){
+        dispatch(setFilter({
+            ...filter,
+            name_like: '',
+            _sort: '',
+            _order: '',
+            categories_like: '',
+            brand_like: '',
+            type_like: '',
+            rating_like: '',
+            price_range_like: ''
+        }))
+        dispatch(setValuesInputSearch(''))
+        dispatch(setSelectedCategories(''))
+        dispatch(setValuesInputPricesGte(0))
+        dispatch(setValuesInputPricesLte(0))
+        listInputBrands.forEach( (item) => item.checked = false )
+        listInputTypes.forEach( (item) => item.checked = false )
+        options.selected = true
+
+    }
 
     return (
         <div>
             <header>
-                <Header 
-                    filter={filter}
-                    setFilter={setFilter} 
-                />
+                <Header />
             </header>
             <main>
                 <div className="container-fluid">
                     <div className="row">
                         <nav className="col-md-2">
-                            <Category category={category}
-                                filter={filter}
-                                setFilter={setFilter}
-                            />
-                            <Types
-                                filter={filter}
-                                setFilter={setFilter} 
-                            />
-                            <Brands
-                                filter={filter}
-                                setFilter={setFilter}
-                            />
-                            <FilterRating 
-                                setFilter={setFilter}
-                            />
-                            <Prices 
-                                filter={filter}
-                                setFilter={setFilter}
-                            />
+                            {
+                                isClearFilter && <button className={styles.clearFilterBtn} onClick={handleClearFilter}>Clear Filter</button>
+                            }
+                            <Category />
+                            <Types />
+                            <Brands />
+                            <FilterRating />
+                            <Prices />
                         </nav>
-                        <Products products={products}
-                            filter={filter}
-                            setFilter={setFilter} 
-                        />
-                        <Pagination  
-                            pagination={pagination}
-                            onPageChange={handlePageChange}
-                        />
+                        <Products />
+                        <Pagination />
                     </div>
                 </div>
             </main>

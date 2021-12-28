@@ -1,47 +1,30 @@
-import React, { useState, useRef } from 'react';
-import PropTypes from 'prop-types';
+import React, { useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styles from '../Header.module.sass'
+import { searchItemSaga, setValuesInputSearch } from '../../../../actions/search';
 
-PostFilterForm.propTypes = {
-    onSubmit: PropTypes.func,
-};
+function PostFilterForm() {
 
-PostFilterForm.defaultProps = {
-    onSubmit: null
-}
+    const filter = useSelector( state => state.filter.filter)
+    const search = useSelector( state => state.search.values)
 
-function PostFilterForm(props) {
-
-    const { onSubmit } = props;
-    const [searchItem, setSearchItem] = useState('');
-    const typingTimeoutRef = useRef(null);
-
-
+    const dispatch = useDispatch()
+    
     function handleSearchFilterChange(e) {
         const value = e.target.value;
-        setSearchItem(value)
 
-        if(!onSubmit) return;
+        dispatch(setValuesInputSearch(value))
 
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current)
-        }
-
-        typingTimeoutRef.current = setTimeout(() =>{
-            const formValues = {
-                searchItem: value,
-            };
-            onSubmit(formValues)
-        }, 300);
+        dispatch(searchItemSaga({filter, value}))
     }
-
     return (
         <div>
             <form className={styles.form}>
                 <input 
                     type="text" 
                     placeholder="Search a product"
-                    value={searchItem}
+                    value={search}
                     onChange={handleSearchFilterChange}    
                 />
                 <button type="submit" >

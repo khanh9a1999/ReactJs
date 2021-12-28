@@ -1,48 +1,109 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import React, { useEffect, useState } from 'react'
 import styles from './Sidebar.module.sass'
 import clsx from 'clsx'
 import { memo } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import {setFilter} from '../../../actions/filter'
+import { getListCategoriesSaga, setSelectedCategories } from '../../../actions/categorys'
 
-Category.propTypes = {
-    category: PropTypes.array,
-};
+function Category() {
 
-Category.defaultProps = {
-    category: [],
-}
+    const listAllCategories = useSelector( state => state.categorys.listAllCategories)
+    const selectedCategory = useSelector( state => state.categorys.selectedCategory)
+    const filter = useSelector( state => state.filter.filter)
 
-function Category(props) {
+    const dispatch = useDispatch()
 
-    const { category, filter, setFilter } = props
+    useEffect(() => {
+        dispatch(getListCategoriesSaga())
+    },[])
 
     function handleCategory(type) {
-        setFilter({
+        dispatch(setFilter({
             ...filter,
             _page: 1,
-            categories: type,
+            categories_like: type,
+        }))
+        dispatch(setSelectedCategories(type))
+    }
+
+    function handleCategoryLv2(type2) {
+        dispatch(setFilter({
+            ...filter,
+            categories_like: type2,
+        }))
+    }
+  
+    const renderCategory = (data) => {
+        let category = []
+        let categoryObj = {}
+        data.forEach(element => {
+            category.push(element.categories)
+        });
+        category.forEach(element => {
+            if (!categoryObj[element[0]]) {
+                if (element.length > 1) {
+                    categoryObj[element[0]] = {
+                        lv1: element[0],
+                        lv2: [element[1]]
+                    }
+                } else {
+                    categoryObj[element[0]] = {
+                        lv1: element[0],
+                        lv2: []
+                    }
+                }
+            } else {
+                if (element.length > 1) {
+                    let lv2Arr = categoryObj[element[0]].lv2
+                    if (!lv2Arr.includes(element[1])) {
+                        categoryObj[element[0]] = {
+                            ...categoryObj[element[0]],
+                            lv2: [...lv2Arr, element[1]]
+                        }
+                    }
+                }
+            }
+        })
+        let categoryKeys = Object.keys(categoryObj)
+        return categoryKeys.map((item, index) => {
+            return (
+                <li className="result-item"
+                    onClick={() => handleCategory(item)}
+                    key={index}
+                >
+                    <a href="#" className="result-link">
+                        <i className="ri-arrow-right-s-line"></i>
+                        { item }
+                    </a>
+                    { categoryObj[item].lv2 && 
+                        <ul className={styles.subListCategory} style={{display: selectedCategory == item ? 'block' : 'none'}}>
+                            { categoryObj[item].lv2.map((subItem, subIndex) => {
+                                return (
+                                    <li className="sub-item"key={subIndex}
+                                        onClick={() => 
+                                            handleCategoryLv2(subItem)
+                                        }
+                                    >
+                                        <a href="#" className="sub-link"
+                                        >
+                                            <i className="ri-arrow-right-s-line"></i>
+                                            { subItem }
+                                        </a>
+                                    </li>
+                                )})
+                            }
+                        </ul>
+                    }
+                </li>
+            )
         })
     }
 
     return (
         <div className={styles.showResults}>
-            <h2 className={styles.categoryTitle}>Show results for</h2>
-            <div className="accordion" id="accordionExample">
-                {category.map((category, index) => {
-                    return (
-                        <div className={styles.accordionItem} key={index}>
-                            <h2 className="accordion-header" id={category.headingId}>
-                                <button className={clsx(styles.accordionBtn, "accordion-button", "collapsed")} type="button" data-bs-toggle="collapse" data-bs-target={`#${category.collapseId}`} aria-expanded="false" aria-controls={category.collapseId}>
-                                    <i className="ri-arrow-right-s-line">
-                                    </i>
-                                    <span onClick={() => handleCategory(category.title)}>{category.title}</span>
-                                </button>
-                            </h2>
-                            
-                        </div>
-                    )
-                })}
-            </div>
+            <h1 className={styles.title}>Category</h1>
+            <ul className={styles.listCategory}>{ listAllCategories && renderCategory(listAllCategories) }</ul>
         </div>
     );
 }

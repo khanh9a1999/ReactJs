@@ -1,57 +1,79 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import styles from './Prices.module.sass'
 import { memo } from 'react'
+import { useSelector, useDispatch} from 'react-redux'
+import { setFilter } from '../../../actions/filter'
+import { getListPricesSaga, setValuesInputPricesLte, setValuesInputPricesGte } from '../../../actions/prices'
 
-function Prices({filter, setFilter}) {
+function Prices() {
+
+    const listPricesFilted = useSelector( state => state.prices.listPricesFilted)
+    const filter = useSelector( state => state.filter.filter)
+    const valuesGte = useSelector( state => state.prices.valuesGte)
+    const valuesLte = useSelector( state => state.prices.valuesLte)
+
+
+    const dispatch = useDispatch()
 
     function handleFilterPrice (price){
-        setFilter({
+        dispatch(setFilter({
             ...filter,
             _page: 1,
-            price_range: price
-        })
+            price_range_like: price
+        }))
     }
 
-    const [products, setProducts] = useState([])
-
     useEffect(() => {
-        async function getProducts() {
-            try {
-                const requestUrl = 'http://localhost:3000/data'
-                const response = await fetch(requestUrl)
-                const responseJSON = await response.json()
-                setProducts(responseJSON)
-            } catch (err) {
-                console.log('failse')
-            }
-        }
-        getProducts()
+        dispatch(getListPricesSaga())
     },[])
 
-    let listPrices = []
-    products.map((item) =>{
-        listPrices.push(item.price_range)
-    })
+    function handleValuesGte(e){
+        let values = e.target.value
+        dispatch(setValuesInputPricesGte(values))
+    }
 
-    let prices = []
-    listPrices.map((item) => {
-        if(prices.indexOf(item) == -1){
-            prices.push(item)
-        }
-    })
+    function handleValuesLte(e){
+        let values = e.target.value
+        dispatch(setValuesInputPricesLte(values))
+        
+    }
 
-    prices.sort()
+    function handle2Price(){
+        dispatch(setFilter({
+            ...filter,
+            price_gte: valuesGte,
+            price_lte: valuesLte
+        }))
+    }
+
 
     return (
         <div className={styles.price}>
             <h2>Price</h2>
             {
-                prices.map((item, index) => {
+                listPricesFilted.map((item, index) => {
                     return(
                         <p onClick={() => handleFilterPrice(item)} key={index}>${item}</p>
                     )
                 })
             }
+            <input type="number" 
+                value={valuesGte}
+                onChange={handleValuesGte}
+                placeholder="price"
+                className={styles.input}
+            />
+            <input type="number" 
+                value={valuesLte}
+                onChange={handleValuesLte}
+                className={styles.input}
+                
+            />
+            <button onClick={handle2Price}
+                className={styles.button}
+            >
+                Submit
+            </button>
         </div>
     );
 }

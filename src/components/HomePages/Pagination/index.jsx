@@ -1,26 +1,24 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import Styles from './Pagination.module.sass'
+import { useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
+import { setFilter } from '../../../actions/filter'
+function Pagination() {
 
-Pagination.propTypes = {
-    pagination: PropTypes.object.isRequired,
-    onPageChange: PropTypes.func,
-};
+    const paginations = useSelector( state => state.paginations.paginations)
+    const filter = useSelector( state => state.filter.filter)
+    const dispatch = useDispatch()
 
-Pagination.defaultProps = {
-    onPageChange: null,
-}
-
-function Pagination(props) {
-
-    const { pagination, onPageChange } = props;
-    const { _page, _limit, _totalRows } = pagination
+    const { _page, _limit, _totalRows } = paginations
+    
     const totalPages = Math.ceil(_totalRows / _limit);
 
     function handlePageChange(newPage) {
-        if (onPageChange) {
-            onPageChange(newPage);
-        }
+        dispatch(setFilter({
+            ...filter,
+            _page: newPage,
+            _limit: 16
+        }))
     }
 
     return (
@@ -41,5 +39,4 @@ function Pagination(props) {
         </div>
     );
 }
-
 export default Pagination;

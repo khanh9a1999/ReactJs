@@ -1,15 +1,21 @@
 import React from 'react';
 import styles from '../FilterRating.module.sass'
 import clsx from 'clsx'
+import { setFilter } from '../../../../actions/filter'
+import { useSelector, useDispatch } from 'react-redux'
 
-function Rating({props, setFilter}) {
+function Rating({props}) {
+
+    const filter = useSelector( state => state.filter.filter)
+    const dispatch = useDispatch()
 
     function handleRatingOne(){
-        setFilter({
+        dispatch(setFilter({
+            ...filter,
             _page: 1,
             _limit: 16,
-            rating: 1
-        })
+            rating_like: props
+        }))
     }
 
     return (
